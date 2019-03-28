@@ -8,8 +8,9 @@
  */
 
 import React, {Component} from 'react';
-import {Platform, StyleSheet, Text, TextInput, View, Button} from 'react-native';
+import {Platform, StyleSheet, Text, TextInput, View, AsyncStorage} from 'react-native';
 import NfcManager, {Ndef} from 'react-native-nfc-manager';
+import { Icon, ThemeProvider, Button } from 'react-native-elements';
 
 const instructions = Platform.select({
   ios: 'Press Cmd+R to reload,\n' + 'Cmd+D or shake for dev menu',
@@ -18,45 +19,122 @@ const instructions = Platform.select({
     'Shake or press menu button for dev menu',
 });
 
+const theme = {
+  Button: {
+    titleStyle: {
+      color: 'white',
+      fontWeight: 'bold',
+    },
+  },
+};
+
+var constEmail = 'none';
+
+function ValidIcon(response) {
+
+  if (response.validEmail == true){
+    return(<Icon 
+            style={styles.inputIcon}
+            name='check-circle'
+            color='green'/>);
+  } else {
+    return(<Icon 
+            style={styles.inputIcon}
+            name='cancel'
+            color='red'/>);
+  }
+  
+}
+
+const storeEmail = async (email) => {
+    try {
+      console.log('getting ready to store email', email);
+      await AsyncStorage.setItem('saved_email', email);
+      console.log('just stored email: ', email);
+    } catch (error) {
+      // console.log('here',this.state.email);
+      console.log(error);
+      console.warn('error saving email');
+    }
+};
+
+const getEmail = async () => {
+    try {
+      return AsyncStorage.getItem('saved_email').then((response) => {
+        console.log('got in async func:',response);
+        return response;
+      });
+    } catch (error) {
+      console.log('get email failed');
+      return 'default@u.northwestern.edu';
+    }
+};
+
+
 
 type Props = {};
 export default class App extends Component<Props> {
   constructor(props) {
     super(props);
-
-    // this.onChange = this.onChange.bind(this);
-
     this.state = {
-      method: 'sticker',
-      email: 'default@u.northwestern.edu',
-      day1date: null,
-      day2date: null,
-      day3date: null,
-      day4date: null,
+        method: 'sticker',
+        email: 'default@u.northwestern.edu',
+        emailConfirmed: false,
 
-      day1month: null,
-      day2month: null,
-      day3month: null,
-      day4month: null,
+        day1date: null,
+        day2date: null,
+        day3date: null,
+        day4date: null,
 
-      day1method: null,
-      day2method: null,
-      day3method: null,
-      day4method: null,
+        day1month: null,
+        day2month: null,
+        day3month: null,
+        day4month: null,
 
+        day1method: null,
+        day2method: null,
+        day3method: null,
+        day4method: null,
     };
+  }
 
+  componentDidMount() {
+    console.log('componentDidMount has been called');
+    getEmail().then((response) => {
+      console.log('function completed and response:', response);
+      if(response){ 
+        saved_email = response;
+        console.log('stored_email', saved_email);
+        this.setState({email: saved_email});
+        constEmail = this.state.email;
+        console.log('stored_state_email', this.state.email);
+      }
+    }).then( function(){
+      this.checkEmail(this.state.email);
+    }).then( function(){
+      this.loadSchedulerData(this.state.email);
+    });
+
+    // check email doesn't finish before loadSchedulerData gets called
+    
+  }
+
+  onChange(state) {
+    this.setState(state);
+  }
+
+  loadSchedulerData(email){
+    console.log('response_will_mount');
     let responseJson = null;
-    this.getSchedulerData().then((response) => {
-      responseJson = JSON.parse(response);
+    this.getSchedulerData(this.state.email).then((response) => {
+      console.log('response_did_mount', response);
+      responseJson = response;
+  
       let day1date = parseInt(responseJson.day1.split('/')[1]);
       let day1month = parseInt(responseJson.day1.split('/')[0]);
       this.setState({day1date: day1date});
       this.setState({day1month: day1month});
       this.setState({day1method: responseJson.day1method});
-
-      console.log('received_day', this.state.day1date);
-      console.log('received_month', this.state.day1month);
 
       let day2date = parseInt(responseJson.day1.split('/')[1]);
       let day2month = parseInt(responseJson.day1.split('/')[0]);
@@ -79,9 +157,6 @@ export default class App extends Component<Props> {
       let day = new Date().getDate();
       let month = new Date().getMonth() + 1;
 
-      console.log('received_day_new', this.state.day1date, day);
-      console.log('received_month_new', this.state.day1month, month);
-
       if (this.state.day1date == day && this.state.day1month == month) {
         this.setState({method: this.state.day1method});
         console.log('we made it', responseJson.day1method);
@@ -97,35 +172,64 @@ export default class App extends Component<Props> {
         this.setState({method: this.state.day4method});
       }
 
-      console.log('received_method', this.state.method);
+      // if(this.state.day1date != null) {
+      //   console.log('gonna doit here');
+      //   this.setState({emailConfirmed: true});
+      // }
+
       return responseJson;
     }).catch((error) => {
-      console.log(error);
+      console.log("server is down", error);
       console.warn("server is down");
     });
-
   }
 
-  onChange(state) {
-    this.setState(state);
+  checkEmail(email){
+    console.log('checking email, ', email);
+    this.getSchedulerData(email).then((response) => {
+      if(response != 'scheduler not found') {
+        this.setState({emailConfirmed: true});
+      } else {
+        this.setState({emailConfirmed: false});
+      }});
+    
+    console.log('stuff working hopefully! ', this.state.emailConfirmed);
+    this.render();
   }
 
   render() {
-
-    console.log('received_method_update', this.state.method);
+    console.log('rendering');
 
     if (this.state.method == 'sticker'){
       return (
       <View style={styles.container}>
-        <TextInput
-            style={styles.emailInput}
-            onChangeText={(email) => this.setState({email})}
-            value={this.state.email}
-        />
-        <Button 
-          onPress={this.onPressDoStuff}
-          title="Authenticate with sticker"
-        />
+        <Text style={styles.title}>Garrett's Authenticator</Text>
+        <View style={styles.email}>
+          <Text style={styles.emailTitle}>Your Northwestern Email</Text>
+          <View style={styles.inputRow}>
+          <TextInput
+              style={styles.emailInput}
+              onChangeText={(email) => {
+                this.setState({email});
+                constEmail = email;
+              }}
+              onSubmitEditing={(event) => {
+                storeEmail(event.nativeEvent.text);
+                this.checkEmail(event.nativeEvent.text);         
+            }}
+              value={this.state.email}
+          />
+          <ValidIcon validEmail={this.state.emailConfirmed} />
+          </View>
+        </View>
+        <ThemeProvider theme={theme}>
+          <Button 
+            onPress={this.onPressDoStuff}
+            style={styles.button}
+            title="Authenticate with sticker"
+            type='outline'
+          />
+        </ThemeProvider>
       </View>
       );
     } else if (this.state.method == 'card') {
@@ -134,6 +238,7 @@ export default class App extends Component<Props> {
         <Button 
           onPress={this.onPressDoStuff}
           title="Authenticate with card"
+          style={styles.button}
         />
       </View>
       );
@@ -143,6 +248,7 @@ export default class App extends Component<Props> {
         <Button 
           onPress={this.onPressDoStuff}
           title="should be a text-box"
+          style={styles.button}
         />
       </View>
       );
@@ -152,15 +258,17 @@ export default class App extends Component<Props> {
         <Button 
           onPress={this.onPressDoStuff}
           title="Just Press this"
+          style={styles.button}
         />
       </View>
       );
     }
   }
 
-  async getSchedulerData() {
+  async getSchedulerData(email) {
     try {
-      let response = await fetch('http://18.212.193.41:8081/scheduler/hank@u.northwestern.edu', {method: 'GET'});
+      let uri = 'http://18.212.193.41:8080/scheduler/' + email;
+      let response = await fetch(uri, {method: 'GET'});
       let responseJson = await response.json();
       return responseJson;
     } catch (error) {
@@ -168,7 +276,11 @@ export default class App extends Component<Props> {
     }
   }
 
+  
+
   onPressDoStuff() {
+    // console.log('textbox:',this.state.email)
+    storeEmail(constEmail);
     NfcManager.registerTagEvent(tag => { 
 
         let parsed = null;
@@ -230,9 +342,11 @@ export default class App extends Component<Props> {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+    // justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5FCFF',
+    backgroundColor: '#191970',
+    color: 'white',
+    padding: 40
   },
   welcome: {
     fontSize: 20,
@@ -246,7 +360,31 @@ const styles = StyleSheet.create({
   },
   emailInput: {
     height: 40,
-    width: 300,
-
-  }
+    width: 210,
+    color: 'white',
+    fontSize: 14,
+    borderBottomColor: 'white',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  emailTitle: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  email: {
+    margin: 40
+  },
+  title: {
+    marginBottom: 150,
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 24,
+  },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+  inputIcon: {
+    opacity: 0
+  },
 });
