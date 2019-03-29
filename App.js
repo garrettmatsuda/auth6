@@ -30,6 +30,10 @@ const theme = {
 
 var constEmail = 'none';
 
+function TitleAndEmail() {
+
+}
+
 function ValidIcon(response) {
 
   if (response.validEmail == true){
@@ -80,6 +84,7 @@ export default class App extends Component<Props> {
         method: 'sticker',
         email: 'default@u.northwestern.edu',
         emailConfirmed: false,
+        textCode: 'Text message code here',
 
         day1date: null,
         day2date: null,
@@ -104,15 +109,19 @@ export default class App extends Component<Props> {
       console.log('function completed and response:', response);
       if(response){ 
         saved_email = response;
-        console.log('stored_email', saved_email);
         this.setState({email: saved_email});
         constEmail = this.state.email;
-        console.log('stored_state_email', this.state.email);
+        return(saved_email);
+      } else {
+        return('no email');
       }
-    }).then( function(){
-      this.checkEmail(this.state.email);
-    }).then( function(){
-      this.loadSchedulerData(this.state.email);
+    }).then((promise) => {
+      console.log('FUCK');
+      console.log('about to check email, ', promise);
+      this.checkEmail(promise);
+      return(promise);
+    }).then((promise) => {
+      this.loadSchedulerData(promise);
     });
 
     // check email doesn't finish before loadSchedulerData gets called
@@ -136,20 +145,20 @@ export default class App extends Component<Props> {
       this.setState({day1month: day1month});
       this.setState({day1method: responseJson.day1method});
 
-      let day2date = parseInt(responseJson.day1.split('/')[1]);
-      let day2month = parseInt(responseJson.day1.split('/')[0]);
+      let day2date = parseInt(responseJson.day2.split('/')[1]);
+      let day2month = parseInt(responseJson.day2.split('/')[0]);
       this.setState({day2date: day2date});
       this.setState({day2month: day2month});
       this.setState({day2method: responseJson.day2method});
 
-      let day3date = parseInt(responseJson.day1.split('/')[1]);
-      let day3month = parseInt(responseJson.day1.split('/')[0]);
+      let day3date = parseInt(responseJson.day3.split('/')[1]);
+      let day3month = parseInt(responseJson.day3.split('/')[0]);
       this.setState({day3date: day3date});
       this.setState({day3month: day3month});
       this.setState({day3method: responseJson.day3method});
 
-      let day4date = parseInt(responseJson.day1.split('/')[1]);
-      let day4month = parseInt(responseJson.day1.split('/')[0]);
+      let day4date = parseInt(responseJson.day4.split('/')[1]);
+      let day4month = parseInt(responseJson.day4.split('/')[0]);
       this.setState({day4date: day4date});
       this.setState({day4month: day4month});
       this.setState({day4method: responseJson.day4method});
@@ -215,7 +224,8 @@ export default class App extends Component<Props> {
               }}
               onSubmitEditing={(event) => {
                 storeEmail(event.nativeEvent.text);
-                this.checkEmail(event.nativeEvent.text);         
+                this.checkEmail(event.nativeEvent.text);
+                this.loadSchedulerData(event.nativeEvent.text);
             }}
               value={this.state.email}
           />
@@ -230,36 +240,140 @@ export default class App extends Component<Props> {
             type='outline'
           />
         </ThemeProvider>
+        <Text style={styles.scheduleTitleStyle}> Your Schedule</Text>
+        <View>
+          <Text style={styles.scheduleStyle}>{this.state.day1month}/{this.state.day1date} - {this.state.day1method}</Text> 
+          <Text style={styles.scheduleStyle}>{this.state.day2month}/{this.state.day2date} - {this.state.day2method}</Text> 
+          <Text style={styles.scheduleStyle}>{this.state.day3month}/{this.state.day3date} - {this.state.day3method}</Text> 
+          <Text style={styles.scheduleStyle}>{this.state.day4month}/{this.state.day4date} - {this.state.day4method}</Text> 
+        </View>
       </View>
       );
     } else if (this.state.method == 'card') {
       return (
       <View style={styles.container}>
-        <Button 
-          onPress={this.onPressDoStuff}
-          title="Authenticate with card"
-          style={styles.button}
-        />
+        <Text style={styles.title}>Garrett's Authenticator</Text>
+        <View style={styles.email}>
+          <Text style={styles.emailTitle}>Your Northwestern Email</Text>
+          <View style={styles.inputRow}>
+          <TextInput
+              style={styles.emailInput}
+              onChangeText={(email) => {
+                this.setState({email});
+                constEmail = email;
+              }}
+              onSubmitEditing={(event) => {
+                storeEmail(event.nativeEvent.text);
+                this.checkEmail(event.nativeEvent.text);
+                this.loadSchedulerData(event.nativeEvent.text);
+            }}
+              value={this.state.email}
+          />
+          <ValidIcon validEmail={this.state.emailConfirmed} />
+          </View>
+        </View>
+        <ThemeProvider theme={theme}>
+          <Button 
+            onPress={this.onPressDoStuff}
+            title="Authenticate with card"
+            style={styles.button}
+            type='outline'
+          />
+        </ThemeProvider>
+        <Text style={styles.scheduleTitleStyle}> Your Schedule</Text>
+        <View>
+          <Text style={styles.scheduleStyle}>{this.state.day1month}/{this.state.day1date} - {this.state.day1method}</Text> 
+          <Text style={styles.scheduleStyle}>{this.state.day2month}/{this.state.day2date} - {this.state.day2method}</Text> 
+          <Text style={styles.scheduleStyle}>{this.state.day3month}/{this.state.day3date} - {this.state.day3method}</Text> 
+          <Text style={styles.scheduleStyle}>{this.state.day4month}/{this.state.day4date} - {this.state.day4method}</Text> 
+        </View>
       </View>
       );
     } else if (this.state.method == 'text-code') {
       return (
       <View style={styles.container}>
+        <Text style={styles.title}>Garrett's Authenticator</Text>
+        <View style={styles.email}>
+          <Text style={styles.emailTitle}>Your Northwestern Email</Text>
+          <View style={styles.inputRow}>
+          <TextInput
+              style={styles.emailInput}
+              onChangeText={(email) => {
+                this.setState({email});
+                constEmail = email;
+              }}
+              onSubmitEditing={(event) => {
+                storeEmail(event.nativeEvent.text);
+                this.checkEmail(event.nativeEvent.text);
+                this.loadSchedulerData(event.nativeEvent.text);
+            }}
+              value={this.state.email}
+          />
+          <ValidIcon validEmail={this.state.emailConfirmed} />
+          </View>
+        </View>
+        <ThemeProvider theme={theme}>
+        <TextInput
+              style={styles.textCodeInput}
+              onChangeText={(textCode) => {
+                this.setState({textCode});
+              }}
+              value={this.state.textCode}
+          />
         <Button 
           onPress={this.onPressDoStuff}
-          title="should be a text-box"
+          title="Authenticate Your Code"
           style={styles.button}
+          type='outline'
         />
+        </ThemeProvider>
+        <Text style={styles.scheduleTitleStyle}> Your Schedule</Text>
+        <View>
+          <Text style={styles.scheduleStyle}>{this.state.day1month}/{this.state.day1date} - {this.state.day1method}</Text> 
+          <Text style={styles.scheduleStyle}>{this.state.day2month}/{this.state.day2date} - {this.state.day2method}</Text> 
+          <Text style={styles.scheduleStyle}>{this.state.day3month}/{this.state.day3date} - {this.state.day3method}</Text> 
+          <Text style={styles.scheduleStyle}>{this.state.day4month}/{this.state.day4date} - {this.state.day4method}</Text> 
+        </View>
       </View>
       );
     } else {
       return (
       <View style={styles.container}>
+        <Text style={styles.title}>Garrett's Authenticator</Text>
+        <View style={styles.email}>
+          <Text style={styles.emailTitle}>Your Northwestern Email</Text>
+          <View style={styles.inputRow}>
+          <TextInput
+              style={styles.emailInput}
+              onChangeText={(email) => {
+                this.setState({email});
+                constEmail = email;
+              }}
+              onSubmitEditing={(event) => {
+                storeEmail(event.nativeEvent.text);
+                this.checkEmail(event.nativeEvent.text);
+                this.loadSchedulerData(event.nativeEvent.text);
+            }}
+              value={this.state.email}
+          />
+          <ValidIcon validEmail={this.state.emailConfirmed} />
+          </View>
+        </View>
+        <ThemeProvider theme={theme}>
         <Button 
           onPress={this.onPressDoStuff}
-          title="Just Press this"
+          title="Authenticate - No Device Needed"
           style={styles.button}
+          type='outline'
         />
+        </ThemeProvider>
+        <Text style={styles.scheduleTitleStyle}> Your Schedule</Text>
+        <View>
+          <Text style={styles.scheduleStyle}>{this.state.day1month}/{this.state.day1date} - {this.state.day1method}</Text> 
+          <Text style={styles.scheduleStyle}>{this.state.day2month}/{this.state.day2date} - {this.state.day2method}</Text> 
+          <Text style={styles.scheduleStyle}>{this.state.day3month}/{this.state.day3date} - {this.state.day3method}</Text> 
+          <Text style={styles.scheduleStyle}>{this.state.day4month}/{this.state.day4date} - {this.state.day4method}</Text> 
+        </View>
       </View>
       );
     }
@@ -366,16 +480,26 @@ const styles = StyleSheet.create({
     borderBottomColor: 'white',
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
+  textCodeInput: {
+    height: 40,
+    width: 210,
+    color: 'white',
+    fontSize: 14,
+    borderBottomColor: 'white',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    marginBottom: 20
+  },
   emailTitle: {
     color: 'white',
     fontWeight: 'bold',
     fontSize: 16,
   },
   email: {
-    margin: 40
+    marginTop: 20,
+    marginBottom: 40
   },
   title: {
-    marginBottom: 150,
+    marginBottom: 40,
     color: 'white',
     fontWeight: 'bold',
     fontSize: 24,
@@ -386,5 +510,17 @@ const styles = StyleSheet.create({
   },
   inputIcon: {
     opacity: 0
+  },
+  scheduleTitleStyle: {
+    marginTop: 40,
+    textDecorationLine: 'underline',
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 20,
+  },
+  scheduleStyle: {
+    marginTop: 20,
+    color: 'white',
+    fontSize: 16,
   },
 });
