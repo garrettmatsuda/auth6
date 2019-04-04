@@ -8,7 +8,7 @@
  */
 
 import React, {Component} from 'react';
-import {Platform, StyleSheet, Text, TextInput, View, AsyncStorage} from 'react-native';
+import {Platform, StyleSheet, Text, TextInput, View, AsyncStorage, Alert} from 'react-native';
 import NfcManager, {Ndef} from 'react-native-nfc-manager';
 import { Icon, ThemeProvider, Button } from 'react-native-elements';
 
@@ -22,17 +22,18 @@ const instructions = Platform.select({
 const theme = {
   Button: {
     titleStyle: {
-      color: 'white',
+      color: '#191970',
       fontWeight: 'bold',
     },
+    buttonStyle: {
+      backgroundColor: '#bdbdbd',
+    },
+    raised: true
   },
 };
 
 var constEmail = 'none';
-
-function TitleAndEmail() {
-
-}
+var constTextCode = '-1';
 
 function ValidIcon(response) {
 
@@ -55,8 +56,8 @@ const storeEmail = async (email) => {
       console.log('getting ready to store email', email);
       await AsyncStorage.setItem('saved_email', email);
       console.log('just stored email: ', email);
+      constEmail = email;
     } catch (error) {
-      // console.log('here',this.state.email);
       console.log(error);
       console.warn('error saving email');
     }
@@ -66,6 +67,7 @@ const getEmail = async () => {
     try {
       return AsyncStorage.getItem('saved_email').then((response) => {
         console.log('got in async func:',response);
+        constEmail = response;
         return response;
       });
     } catch (error) {
@@ -81,10 +83,10 @@ export default class App extends Component<Props> {
   constructor(props) {
     super(props);
     this.state = {
-        method: 'sticker',
+        method: 'none',
         email: 'default@u.northwestern.edu',
         emailConfirmed: false,
-        textCode: 'Text message code here',
+        textCode: '',
 
         day1date: null,
         day2date: null,
@@ -116,21 +118,16 @@ export default class App extends Component<Props> {
         return('no email');
       }
     }).then((promise) => {
-      console.log('FUCK');
-      console.log('about to check email, ', promise);
       this.checkEmail(promise);
       return(promise);
     }).then((promise) => {
       this.loadSchedulerData(promise);
     });
-
-    // check email doesn't finish before loadSchedulerData gets called
-    
   }
 
-  onChange(state) {
-    this.setState(state);
-  }
+  // onChange(state) {
+  //   this.setState(state);
+  // }
 
   loadSchedulerData(email){
     console.log('response_will_mount');
@@ -181,15 +178,9 @@ export default class App extends Component<Props> {
         this.setState({method: this.state.day4method});
       }
 
-      // if(this.state.day1date != null) {
-      //   console.log('gonna doit here');
-      //   this.setState({emailConfirmed: true});
-      // }
-
       return responseJson;
     }).catch((error) => {
       console.log("server is down", error);
-      console.warn("server is down");
     });
   }
 
@@ -202,7 +193,6 @@ export default class App extends Component<Props> {
         this.setState({emailConfirmed: false});
       }});
     
-    console.log('stuff working hopefully! ', this.state.emailConfirmed);
     this.render();
   }
 
@@ -237,7 +227,6 @@ export default class App extends Component<Props> {
             onPress={this.onPressDoStuff}
             style={styles.button}
             title="Authenticate with sticker"
-            type='outline'
           />
         </ThemeProvider>
         <Text style={styles.scheduleTitleStyle}> Your Schedule</Text>
@@ -277,7 +266,6 @@ export default class App extends Component<Props> {
             onPress={this.onPressDoStuff}
             title="Authenticate with card"
             style={styles.button}
-            type='outline'
           />
         </ThemeProvider>
         <Text style={styles.scheduleTitleStyle}> Your Schedule</Text>
@@ -308,6 +296,14 @@ export default class App extends Component<Props> {
                 this.loadSchedulerData(event.nativeEvent.text);
             }}
               value={this.state.email}
+              returnKeyType='done'
+              textContentType='emailAddress'
+              keyboardType='email-address'
+              onEndEditing={(event) => {
+                storeEmail(this.state.email);
+                this.checkEmail(this.state.email);
+                this.loadSchedulerData(this.state.email);
+              }}
           />
           <ValidIcon validEmail={this.state.emailConfirmed} />
           </View>
@@ -317,14 +313,58 @@ export default class App extends Component<Props> {
               style={styles.textCodeInput}
               onChangeText={(textCode) => {
                 this.setState({textCode});
+                constTextCode = textCode;
               }}
               value={this.state.textCode}
+              clearTextOnFocus={true}
+              returnKeyType='done'
+              placeholder='Text message code here'
+              placeholderTextColor='#bdbdbd'
+              keyboardType='numeric'
           />
         <Button 
-          onPress={this.onPressDoStuff}
+          onPress={this.onPressSubmitCode}
           title="Authenticate Your Code"
           style={styles.button}
-          type='outline'
+        />
+        </ThemeProvider>
+        <Text style={styles.scheduleTitleStyle}> Your Schedule</Text>
+        <View>
+          <Text style={styles.scheduleStyle}>{this.state.day1month}/{this.state.day1date} - {this.state.day1method}</Text> 
+          <Text style={styles.scheduleStyle}>{this.state.day2month}/{this.state.day2date} - {this.state.day2method}</Text> 
+          <Text style={styles.scheduleStyle}>{this.state.day3month}/{this.state.day3date} - {this.state.day3method}</Text> 
+          <Text style={styles.scheduleStyle}>{this.state.day4month}/{this.state.day4date} - {this.state.day4method}</Text> 
+        </View>
+      </View>
+      );
+    } else if (this.state.method == 'none') {
+      return (
+      <View style={styles.container}>
+        <Text style={styles.title}>Garrett's Authenticator</Text>
+        <View style={styles.email}>
+          <Text style={styles.emailTitle}>Your Northwestern Email</Text>
+          <View style={styles.inputRow}>
+          <TextInput
+              style={styles.emailInput}
+              onChangeText={(email) => {
+                this.setState({email});
+                constEmail = email;
+              }}
+              onSubmitEditing={(event) => {
+                storeEmail(event.nativeEvent.text);
+                this.checkEmail(event.nativeEvent.text);
+                this.loadSchedulerData(event.nativeEvent.text);
+              }}
+              value={this.state.email}
+          />
+          <ValidIcon validEmail={this.state.emailConfirmed} />
+          </View>
+        </View>
+        <ThemeProvider theme={theme}>
+        <Button 
+          onPress={this.onPressSubmit}
+          title="Authenticate - No Device Needed"
+          style={styles.button}
         />
         </ThemeProvider>
         <Text style={styles.scheduleTitleStyle}> Your Schedule</Text>
@@ -355,19 +395,21 @@ export default class App extends Component<Props> {
                 this.loadSchedulerData(event.nativeEvent.text);
             }}
               value={this.state.email}
+              autoComplete='email'
+              clearButtonMode='while-editing'
           />
           <ValidIcon validEmail={this.state.emailConfirmed} />
           </View>
         </View>
+        <Text style={styles.messageStyle}>Study is not yet underway. Check your schedule for the start date. Feel free to practice authenticating with the Card or Sticker</Text>
         <ThemeProvider theme={theme}>
         <Button 
           onPress={this.onPressDoStuff}
-          title="Authenticate - No Device Needed"
+          title="Authenticate a Device"
           style={styles.button}
-          type='outline'
         />
         </ThemeProvider>
-        <Text style={styles.scheduleTitleStyle}> Your Schedule</Text>
+        <Text style={styles.scheduleTitleStyle}>Your Schedule</Text>
         <View>
           <Text style={styles.scheduleStyle}>{this.state.day1month}/{this.state.day1date} - {this.state.day1method}</Text> 
           <Text style={styles.scheduleStyle}>{this.state.day2month}/{this.state.day2date} - {this.state.day2method}</Text> 
@@ -379,22 +421,70 @@ export default class App extends Component<Props> {
     }
   }
 
-  async getSchedulerData(email) {
+  getSchedulerData(email) {
     try {
-      let uri = 'http://18.212.193.41:8080/scheduler/' + email;
-      let response = await fetch(uri, {method: 'GET'});
-      let responseJson = await response.json();
-      return responseJson;
+      var uri = 'http://18.212.193.41:8080/scheduler/' + email;
+      return fetch(uri, {method: 'GET'})
+        .then((response) => { return response.json(); })
+        .catch((error) => { Alert.alert('Server is down, try again in 2 minutes');});
     } catch (error) {
       console.error(error);
     }
   }
 
-  
+  onPressSubmit() {
+    var post_url = 'http://18.212.193.41:8080/log/' + constEmail;
+    fetch(post_url, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        method: 'none'
+      })
+    }).then((response) => {
+      success = true;
+      console.log(response);
+      return response.json();
+    }).then((response) => {
+      if(response.valid){
+        Alert.alert('Response received - 25 cents!');
+      } else {
+        Alert.alert('Response not in time or wrong method');
+      }
+    }).catch((error)=>{
+      Alert.alert('Server is down, try again in 2 minutes');
+    });
+
+  }
+
+  onPressSubmitCode() {
+    var post_url = 'http://18.212.193.41:8080/textCode/' + constEmail;
+    fetch(post_url, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        code: constTextCode
+      })
+    }).then((response) => {
+      console.log(response);
+      return response.json();
+    }).then((response) => {
+      if(response.valid){
+        Alert.alert('Response received - 25 cents!');
+      } else {
+        Alert.alert('Response not in time, wrong code or wrong method');
+      }
+    }).catch((error)=>{
+      Alert.alert('Server is down, try again in 2 minutes');
+    });
+  }
 
   onPressDoStuff() {
-    // console.log('textbox:',this.state.email)
-    storeEmail(constEmail);
     NfcManager.registerTagEvent(tag => { 
 
         let parsed = null;
@@ -415,48 +505,61 @@ export default class App extends Component<Props> {
         console.log(parsed);
         let type = parsed[0][0];
 
-        // this.setState({ nfcFeedback: type});
         console.log(type);
-        try {
-          var post_url = 'http://18.212.193.41:8080/log/me';
-          if (type == "text") {
-            fetch(post_url, {
-              method: 'POST',
-              headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                method: 'sticker'
-              })
-            });
-          } else {
-            fetch(post_url, {
-              method: 'POST',
-              headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                method: 'card'
-              })
-            });
-          }
-        } catch(error) {
-          console.log('error');
-          console.warn('server is down');
+        var post_url = 'http://18.212.193.41:8080/log/' + constEmail;
+        if (type == "text") {
+          fetch(post_url, {
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              method: 'sticker'
+            })
+          }).then((response) => {
+            console.log(response);
+            return response.json();
+          }).then((response) => {
+            if(response.valid){
+              Alert.alert('Response received - 25 cents!');
+            } else {
+              Alert.alert('Response not in time or wrong method');
+            }
+          }).catch((error)=>{
+            Alert.alert('Server is down, try again in 2 minutes');
+          });
+        } else {
+          fetch(post_url, {
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              method: 'card'
+            })
+          }).then((response) => {
+            console.log(response);
+            return response.json();
+          }).then((response) => {
+            if(response.valid){
+              Alert.alert('Response received - 25 cents!');
+            } else {
+              Alert.alert('Response not in time or wrong method');
+            }
+          }).catch((error)=>{
+            Alert.alert('Server is down, try again in 2 minutes');
+          });
         }
-        },
-        'Hold your device over the tag', true);
-    // this.setState({method: 'text-code'});
-    NfcManager.unregisterTagEvent();
+        NfcManager.unregisterTagEvent();
+    });
   }
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#191970',
     color: 'white',
@@ -520,6 +623,11 @@ const styles = StyleSheet.create({
   },
   scheduleStyle: {
     marginTop: 20,
+    color: 'white',
+    fontSize: 16,
+  },
+  messageStyle: {
+    marginBottom: 20,
     color: 'white',
     fontSize: 16,
   },
