@@ -21,7 +21,7 @@
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
-	<string>4</string>
+	<string>8</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NFCReaderUsageDescription</key>
@@ -39,6 +39,10 @@
 			</dict>
 		</dict>
 	</dict>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>NFC Reader is used to run an experiment on NFC tags. The NFC Tags will only have static strings with numbers, which verify that the user has scanned a tag. Tags will not be used to redirect users to websites or locate users. Location services are not used in this app. The only personal data collected by the app is email addresses and timestamps of when users choose to authenticate.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>NFC Reader is used to run an experiment on NFC tags. The NFC Tags will only have static strings with numbers, which verify that the user has scanned a tag. Tags will not be used to redirect users to websites or locate users. Location services are not used in this app. The only personal data collected by the app is email addresses and timestamps of when users choose to authenticate.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>AntDesign.ttf</string>

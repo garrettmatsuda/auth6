@@ -83,7 +83,7 @@ export default class App extends Component<Props> {
   constructor(props) {
     super(props);
     this.state = {
-        method: 'none',
+        method: 'not-ready',
         email: 'default@u.northwestern.edu',
         emailConfirmed: false,
         textCode: '',
@@ -102,6 +102,11 @@ export default class App extends Component<Props> {
         day2method: null,
         day3method: null,
         day4method: null,
+
+        displayday1method: null,
+        displayday2method: null,
+        displayday3method: null,
+        displayday4method: null,
     };
   }
 
@@ -165,7 +170,6 @@ export default class App extends Component<Props> {
 
       if (this.state.day1date == day && this.state.day1month == month) {
         this.setState({method: this.state.day1method});
-        console.log('we made it', responseJson.day1method);
 
       } else if (this.state.day2date == day && this.state.day2month == month) {
 
@@ -177,6 +181,26 @@ export default class App extends Component<Props> {
 
         this.setState({method: this.state.day4method});
       }
+
+      if(this.state.day1method == 'text-code'){ this.setState({displayday1method: 'SMS Code'});}
+      else if(this.state.day1method == 'sticker'){ this.setState({displayday1method: 'Sticker'}); }
+      else if(this.state.day1method == 'card'){ this.setState({displayday1method: 'Card'}); }
+      else if(this.state.day1method == 'none'){ this.setState({displayday1method: 'No Device'}); }
+
+      if(this.state.day2method == 'text-code'){ this.setState({displayday2method: 'SMS Code'}); }
+      else if(this.state.day2method == 'sticker'){ this.setState({displayday2method: 'Sticker'}); }
+      else if(this.state.day2method == 'card'){ this.setState({displayday2method: 'Card'}); }
+      else if(this.state.day2method == 'none'){ this.setState({displayday2method: 'No Device'}); }
+
+      if(this.state.day3method == 'text-code'){ this.setState({displayday3method: 'SMS Code'}); }
+      else if(this.state.day3method == 'sticker'){ this.setState({displayday3method: 'Sticker'}); }
+      else if(this.state.day3method == 'card'){ this.setState({displayday3method: 'Card'}); }
+      else if(this.state.day3method == 'none'){ this.setState({displayday3method: 'No Device'}); }
+
+      if(this.state.day4method == 'text-code'){ this.setState({displayday4method: 'SMS Code'}); }
+      else if(this.state.day4method == 'sticker'){ this.setState({displayday4method: 'Sticker'}); }
+      else if(this.state.day4method == 'card'){ this.setState({displayday4method: 'Card'}); }
+      else if(this.state.day4method == 'none'){ this.setState({displayday4method: 'No Device'}); }
 
       return responseJson;
     }).catch((error) => {
@@ -202,6 +226,17 @@ export default class App extends Component<Props> {
     if (this.state.method == 'sticker'){
       return (
       <View style={styles.container}>
+        <Button
+          style={styles.helpStyle}
+          icon={
+            <Icon
+              name="help"
+              size={15}
+              color="white"
+            />
+          }
+          type="clear"
+        />
         <Text style={styles.title}>Garrett's Authenticator</Text>
         <View style={styles.email}>
           <Text style={styles.emailTitle}>Your Northwestern Email</Text>
@@ -218,6 +253,15 @@ export default class App extends Component<Props> {
                 this.loadSchedulerData(event.nativeEvent.text);
             }}
               value={this.state.email}
+              returnKeyType='done'
+              textContentType='emailAddress'
+              keyboardType='email-address'
+              clearButtonMode='while-editing'
+              onEndEditing={(event) => {
+                storeEmail(this.state.email);
+                this.checkEmail(this.state.email);
+                this.loadSchedulerData(this.state.email);
+              }}
           />
           <ValidIcon validEmail={this.state.emailConfirmed} />
           </View>
@@ -231,10 +275,10 @@ export default class App extends Component<Props> {
         </ThemeProvider>
         <Text style={styles.scheduleTitleStyle}> Your Schedule</Text>
         <View>
-          <Text style={styles.scheduleStyle}>{this.state.day1month}/{this.state.day1date} - {this.state.day1method}</Text> 
-          <Text style={styles.scheduleStyle}>{this.state.day2month}/{this.state.day2date} - {this.state.day2method}</Text> 
-          <Text style={styles.scheduleStyle}>{this.state.day3month}/{this.state.day3date} - {this.state.day3method}</Text> 
-          <Text style={styles.scheduleStyle}>{this.state.day4month}/{this.state.day4date} - {this.state.day4method}</Text> 
+          <Text style={styles.scheduleStyle}>{this.state.day1month}/{this.state.day1date} - {this.state.displayday1method}</Text> 
+          <Text style={styles.scheduleStyle}>{this.state.day2month}/{this.state.day2date} - {this.state.displayday2method}</Text> 
+          <Text style={styles.scheduleStyle}>{this.state.day3month}/{this.state.day3date} - {this.state.displayday3method}</Text> 
+          <Text style={styles.scheduleStyle}>{this.state.day4month}/{this.state.day4date} - {this.state.displayday4method}</Text> 
         </View>
       </View>
       );
@@ -257,6 +301,15 @@ export default class App extends Component<Props> {
                 this.loadSchedulerData(event.nativeEvent.text);
             }}
               value={this.state.email}
+              returnKeyType='done'
+              textContentType='emailAddress'
+              keyboardType='email-address'
+              clearButtonMode='while-editing'
+              onEndEditing={(event) => {
+                storeEmail(this.state.email);
+                this.checkEmail(this.state.email);
+                this.loadSchedulerData(this.state.email);
+              }}
           />
           <ValidIcon validEmail={this.state.emailConfirmed} />
           </View>
@@ -270,10 +323,10 @@ export default class App extends Component<Props> {
         </ThemeProvider>
         <Text style={styles.scheduleTitleStyle}> Your Schedule</Text>
         <View>
-          <Text style={styles.scheduleStyle}>{this.state.day1month}/{this.state.day1date} - {this.state.day1method}</Text> 
-          <Text style={styles.scheduleStyle}>{this.state.day2month}/{this.state.day2date} - {this.state.day2method}</Text> 
-          <Text style={styles.scheduleStyle}>{this.state.day3month}/{this.state.day3date} - {this.state.day3method}</Text> 
-          <Text style={styles.scheduleStyle}>{this.state.day4month}/{this.state.day4date} - {this.state.day4method}</Text> 
+          <Text style={styles.scheduleStyle}>{this.state.day1month}/{this.state.day1date} - {this.state.displayday1method}</Text> 
+          <Text style={styles.scheduleStyle}>{this.state.day2month}/{this.state.day2date} - {this.state.displayday2method}</Text> 
+          <Text style={styles.scheduleStyle}>{this.state.day3month}/{this.state.day3date} - {this.state.displayday3method}</Text> 
+          <Text style={styles.scheduleStyle}>{this.state.day4month}/{this.state.day4date} - {this.state.displayday4method}</Text> 
         </View>
       </View>
       );
@@ -299,6 +352,7 @@ export default class App extends Component<Props> {
               returnKeyType='done'
               textContentType='emailAddress'
               keyboardType='email-address'
+              clearButtonMode='while-editing'
               onEndEditing={(event) => {
                 storeEmail(this.state.email);
                 this.checkEmail(this.state.email);
@@ -324,16 +378,16 @@ export default class App extends Component<Props> {
           />
         <Button 
           onPress={this.onPressSubmitCode}
-          title="Authenticate Your Code"
+          title="Authenticate your code"
           style={styles.button}
         />
         </ThemeProvider>
         <Text style={styles.scheduleTitleStyle}> Your Schedule</Text>
         <View>
-          <Text style={styles.scheduleStyle}>{this.state.day1month}/{this.state.day1date} - {this.state.day1method}</Text> 
-          <Text style={styles.scheduleStyle}>{this.state.day2month}/{this.state.day2date} - {this.state.day2method}</Text> 
-          <Text style={styles.scheduleStyle}>{this.state.day3month}/{this.state.day3date} - {this.state.day3method}</Text> 
-          <Text style={styles.scheduleStyle}>{this.state.day4month}/{this.state.day4date} - {this.state.day4method}</Text> 
+          <Text style={styles.scheduleStyle}>{this.state.day1month}/{this.state.day1date} - {this.state.displayday1method}</Text> 
+          <Text style={styles.scheduleStyle}>{this.state.day2month}/{this.state.day2date} - {this.state.displayday2method}</Text> 
+          <Text style={styles.scheduleStyle}>{this.state.day3month}/{this.state.day3date} - {this.state.displayday3method}</Text> 
+          <Text style={styles.scheduleStyle}>{this.state.day4month}/{this.state.day4date} - {this.state.displayday4method}</Text> 
         </View>
       </View>
       );
@@ -354,8 +408,17 @@ export default class App extends Component<Props> {
                 storeEmail(event.nativeEvent.text);
                 this.checkEmail(event.nativeEvent.text);
                 this.loadSchedulerData(event.nativeEvent.text);
-              }}
+            }}
               value={this.state.email}
+              returnKeyType='done'
+              textContentType='emailAddress'
+              keyboardType='email-address'
+              clearButtonMode='while-editing'
+              onEndEditing={(event) => {
+                storeEmail(this.state.email);
+                this.checkEmail(this.state.email);
+                this.loadSchedulerData(this.state.email);
+              }}
           />
           <ValidIcon validEmail={this.state.emailConfirmed} />
           </View>
@@ -363,16 +426,16 @@ export default class App extends Component<Props> {
         <ThemeProvider theme={theme}>
         <Button 
           onPress={this.onPressSubmit}
-          title="Authenticate - No Device Needed"
+          title="Authenticate - no device deeded"
           style={styles.button}
         />
         </ThemeProvider>
         <Text style={styles.scheduleTitleStyle}> Your Schedule</Text>
         <View>
-          <Text style={styles.scheduleStyle}>{this.state.day1month}/{this.state.day1date} - {this.state.day1method}</Text> 
-          <Text style={styles.scheduleStyle}>{this.state.day2month}/{this.state.day2date} - {this.state.day2method}</Text> 
-          <Text style={styles.scheduleStyle}>{this.state.day3month}/{this.state.day3date} - {this.state.day3method}</Text> 
-          <Text style={styles.scheduleStyle}>{this.state.day4month}/{this.state.day4date} - {this.state.day4method}</Text> 
+          <Text style={styles.scheduleStyle}>{this.state.day1month}/{this.state.day1date} - {this.state.displayday1method}</Text> 
+          <Text style={styles.scheduleStyle}>{this.state.day2month}/{this.state.day2date} - {this.state.displayday2method}</Text> 
+          <Text style={styles.scheduleStyle}>{this.state.day3month}/{this.state.day3date} - {this.state.displayday3method}</Text> 
+          <Text style={styles.scheduleStyle}>{this.state.day4month}/{this.state.day4date} - {this.state.displayday4method}</Text>  
         </View>
       </View>
       );
@@ -395,8 +458,15 @@ export default class App extends Component<Props> {
                 this.loadSchedulerData(event.nativeEvent.text);
             }}
               value={this.state.email}
-              autoComplete='email'
+              returnKeyType='done'
+              textContentType='emailAddress'
+              keyboardType='email-address'
               clearButtonMode='while-editing'
+              onEndEditing={(event) => {
+                storeEmail(this.state.email);
+                this.checkEmail(this.state.email);
+                this.loadSchedulerData(this.state.email);
+              }}
           />
           <ValidIcon validEmail={this.state.emailConfirmed} />
           </View>
@@ -411,10 +481,10 @@ export default class App extends Component<Props> {
         </ThemeProvider>
         <Text style={styles.scheduleTitleStyle}>Your Schedule</Text>
         <View>
-          <Text style={styles.scheduleStyle}>{this.state.day1month}/{this.state.day1date} - {this.state.day1method}</Text> 
-          <Text style={styles.scheduleStyle}>{this.state.day2month}/{this.state.day2date} - {this.state.day2method}</Text> 
-          <Text style={styles.scheduleStyle}>{this.state.day3month}/{this.state.day3date} - {this.state.day3method}</Text> 
-          <Text style={styles.scheduleStyle}>{this.state.day4month}/{this.state.day4date} - {this.state.day4method}</Text> 
+          <Text style={styles.scheduleStyle}>{this.state.day1month}/{this.state.day1date} - {this.state.displayday1method}</Text> 
+          <Text style={styles.scheduleStyle}>{this.state.day2month}/{this.state.day2date} - {this.state.displayday2method}</Text> 
+          <Text style={styles.scheduleStyle}>{this.state.day3month}/{this.state.day3date} - {this.state.displayday3method}</Text> 
+          <Text style={styles.scheduleStyle}>{this.state.day4month}/{this.state.day4date} - {this.state.displayday4method}</Text> 
         </View>
       </View>
       );
@@ -609,7 +679,7 @@ const styles = StyleSheet.create({
   },
   inputRow: {
     flexDirection: 'row',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   inputIcon: {
     opacity: 0
@@ -630,5 +700,9 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     color: 'white',
     fontSize: 16,
+  },
+  helpStyle: {
+    position: 'absolute',
+    left: 150
   },
 });
